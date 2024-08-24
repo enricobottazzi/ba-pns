@@ -63,47 +63,51 @@ class BarabasiAlbertGraph:
             self.G.add_edge(self.new_node, random_proba_node)
             print(f"Edge added: {self.new_node + 1} {random_proba_node + 1}")
 
-    def plot_degree_distribution(self):
-        """Plot the degree distribution P(k) on a log-log scale and fit a power law."""
-        degree_counts = nx.degree_histogram(self.G)
-        degree_probabilities = [count / sum(degree_counts) for count in degree_counts]
+    def plot(self):
+        colour='#40a6d1'
+        alpha=0.8
+        expct_lo=1
+        expct_hi=10
+        expct_const=1
+        save_path = 'plot'
+        graph = self.G
         
-        # Prepare data for plotting
-        x = np.array(range(1, len(degree_probabilities) + 1))
-        y = np.array(degree_probabilities)
+        num_nodes = graph.number_of_nodes()
+        max_degree = max(dict(graph.degree()).values())
         
-        # Remove zeros for log-log plot
-        nonzero_mask = y > 0
-        x_nonzero = x[nonzero_mask]
-        y_nonzero = y[nonzero_mask]
+        # X-axis and y-axis values
+        x = list(range(max_degree + 1))
+        y_tmp = [sum(1 for n in graph.nodes() if graph.degree(n) == i) for i in x]
+        y = [i / num_nodes for i in y_tmp]
         
-        # Fit a power law using linear regression on log-log scale
-        log_x = np.log(x_nonzero)
-        log_y = np.log(y_nonzero)
-        slope, intercept, r_value, _, _ = stats.linregress(log_x, log_y)
+        # Function to plot and save
+        def plot_and_save(scale):
+            plt.figure(figsize=(10, 6))
+            if scale == 'log':
+                plt.xscale('log')
+                plt.yscale('log')
+                plt.title('Degree distribution (log-log scale)')
+                plt.ylabel('log(P(k))')
+                plt.xlabel('log(k)')
+            else:
+                plt.title('Degree distribution (linear scale)')
+                plt.ylabel('P(k)')
+                plt.xlabel('k')
+            
+            plt.plot(x, y, linewidth=0, marker='o', markersize=8, color=colour, alpha=alpha, label='Actual distribution')
+            
+            # Add theoretical distribution line k^-3
+            w = list(range(expct_lo, expct_hi))
+            z = [(i**-3) * expct_const for i in w]
+            plt.plot(w, z, 'k-', color='#7f7f7f', label='Theoretical fit (k^-3)')
+            
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(f'{save_path}_{scale}.png')
+            plt.close()
         
-        # Create the plot
-        plt.figure(figsize=(10, 6))
-        plt.loglog(x_nonzero, y_nonzero, 'bo', alpha=0.6, label='Observed data')
-        plt.loglog(x_nonzero, np.exp(intercept) * x_nonzero**slope, 'r-', 
-                   label=f'Fitted power law (γ = {-slope:.2f})')
-        
-        plt.title('Degree Distribution P(k) - Log-Log Scale with Power Law Fit')
-        plt.xlabel('Degree k')
-        plt.ylabel('Probability P(k)')
-        plt.legend()
-        
-        # Add text box with fit information
-        fit_info = (f"Power law fit:\n"
-                    f"P(k) ∝ k^(-γ)\n"
-                    f"γ = {-slope:.2f}\n"
-                    f"R² = {r_value**2:.3f}")
-        plt.text(0.95, 0.95, fit_info, transform=plt.gca().transAxes, 
-                 verticalalignment='top', horizontalalignment='right',
-                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        
-        plt.tight_layout()
-        # save to a file
-        plt.savefig("degree_distribution.png")
-        print(f"Estimated power law exponent (γ): {-slope:.2f}")
-        print(f"R² value: {r_value**2:.3f}")
+        # Plot and save both linear and log-log scales
+        plot_and_save('linear')
+        plot_and_save('log')
+
+        print(f"Plots saved as {save_path}_linear.png and {save_path}_log.png")
