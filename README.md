@@ -2,11 +2,11 @@
 
 Simulation of a Payment Network based on [BA99]. The result is a simulated network that cointains:
 - A directed graph, where an edge `(i, j)` represents an obligation from firm `i` to firm `j` 
-- An amount matrix, where the entry [i][j] indicates the amount that firm `i` owes to firm `j`
+- An amount matrix, where the entry `[i][j]` indicates the amount that firm `i` owes to firm `j`
 
 The resulting network shows:
-a) the degree of the nodes in the network shows a scale free distribution (see `degree_distribution.png`)
-b) the total amount of incoming and outgoing obligations of the nodes shows a scale free distribution (see `amount_distribution.png`)
+- the degree of the nodes in the network shows a scale free distribution (see `degree_distribution.png`)
+- the total amount of incoming and outgoing obligations of the nodes shows a scale free distribution (see `amount_distribution.png`)
 
 Both the results are in line with the findings, from real-world dataset, of [Ber+21] and [Tam+12]
 
