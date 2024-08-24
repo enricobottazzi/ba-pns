@@ -2,7 +2,7 @@
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats
+import powerlaw
 
 class BarabasiAlbertGraph:
     def __init__(self, n, m, m0):
@@ -63,51 +63,22 @@ class BarabasiAlbertGraph:
             self.G.add_edge(self.new_node, random_proba_node)
             print(f"Edge added: {self.new_node + 1} {random_proba_node + 1}")
 
-    def plot(self):
-        colour='#40a6d1'
-        alpha=0.8
-        expct_lo=1
-        expct_hi=10
-        expct_const=1
-        save_path = 'plot'
-        graph = self.G
-        
-        num_nodes = graph.number_of_nodes()
-        max_degree = max(dict(graph.degree()).values())
-        
-        # X-axis and y-axis values
-        x = list(range(max_degree + 1))
-        y_tmp = [sum(1 for n in graph.nodes() if graph.degree(n) == i) for i in x]
-        y = [i / num_nodes for i in y_tmp]
-        
-        # Function to plot and save
-        def plot_and_save(scale):
-            plt.figure(figsize=(10, 6))
-            if scale == 'log':
-                plt.xscale('log')
-                plt.yscale('log')
-                plt.title('Degree distribution (log-log scale)')
-                plt.ylabel('log(P(k))')
-                plt.xlabel('log(k)')
-            else:
-                plt.title('Degree distribution (linear scale)')
-                plt.ylabel('P(k)')
-                plt.xlabel('k')
-            
-            plt.plot(x, y, linewidth=0, marker='o', markersize=8, color=colour, alpha=alpha, label='Actual distribution')
-            
-            # Add theoretical distribution line k^-3
-            w = list(range(expct_lo, expct_hi))
-            z = [(i**-3) * expct_const for i in w]
-            plt.plot(w, z, 'k-', color='#7f7f7f', label='Theoretical fit (k^-3)')
-            
-            plt.legend()
-            plt.tight_layout()
-            plt.savefig(f'{save_path}_{scale}.png')
-            plt.close()
-        
-        # Plot and save both linear and log-log scales
-        plot_and_save('linear')
-        plot_and_save('log')
+    def measure_alpha(self):
+        """Measure the alpha value of the degree distribution."""
+        degrees = [degree for node, degree in self.G.degree()]
+        results = powerlaw.Fit(degrees)
+        alpha = results.power_law.alpha
+        return alpha
 
-        print(f"Plots saved as {save_path}_linear.png and {save_path}_log.png")
+    def plot_degree_distribution(self):
+        """Plot the degree distribution on a log-log scale."""
+        degrees = [degree for node, degree in self.G.degree()]
+        plt.figure()
+        plt.hist(degrees, bins=np.logspace(np.log10(1), np.log10(max(degrees)), num=50), density=True)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xlabel('Degree')
+        plt.ylabel('Frequency')
+        plt.title('Degree Distribution (Log-Log Scale)')
+        # save the plot to a file
+        plt.savefig('degree_distribution.png')
