@@ -118,26 +118,33 @@ class PaymentNetworkSimulated:
         
         return node_amounts
     
-    def measure_alpha(self):
-        """Measure the alpha value of the in-degree and out-degree distributions."""
-        in_degrees = [degree for node, degree in self.G.in_degree()]
-        out_degrees = [degree for node, degree in self.G.out_degree()]
+    def measure_alpha(self, distribution):
+        """
+        Measure the alpha value of the given distribution.
         
-        results_in = powerlaw.Fit(in_degrees)
-        results_out = powerlaw.Fit(out_degrees)
+        Parameters:
+        distribution (list): A list of values representing the distribution to analyze
         
-        alpha_in = results_in.power_law.alpha
-        alpha_out = results_out.power_law.alpha
-        return alpha_in, alpha_out
+        Returns:
+        float: The alpha value of the power law fit
+        """
+        results = powerlaw.Fit(distribution)
+        return results.power_law.alpha
+        
 
     def plot_degree_distribution(self):
         """Plot the in-degree and out-degree distributions on a log-log scale."""
         in_degrees = [degree for node, degree in self.G.in_degree()]
         out_degrees = [degree for node, degree in self.G.out_degree()]
         
-        plt.figure()
-        plt.hist(in_degrees, bins=np.logspace(np.log10(1), np.log10(max(in_degrees)), num=50), density=True, alpha=0.5, label='In-degree')
-        plt.hist(out_degrees, bins=np.logspace(np.log10(1), np.log10(max(out_degrees)), num=50), density=True, alpha=0.5, label='Out-degree')
+        alpha_in = self.measure_alpha(in_degrees)
+        alpha_out = self.measure_alpha(out_degrees)
+        
+        plt.figure(figsize=(10, 6))
+        plt.hist(in_degrees, bins=np.logspace(np.log10(1), np.log10(max(in_degrees)), num=50), 
+                 density=True, alpha=0.5, label=f'In-degree (α = {alpha_in:.2f})')
+        plt.hist(out_degrees, bins=np.logspace(np.log10(1), np.log10(max(out_degrees)), num=50), 
+                 density=True, alpha=0.5, label=f'Out-degree (α = {alpha_out:.2f})')
         
         plt.xscale('log')
         plt.yscale('log')
@@ -145,7 +152,9 @@ class PaymentNetworkSimulated:
         plt.ylabel('Frequency')
         plt.title('In-degree and Out-degree Distributions (Log-Log Scale)')
         plt.legend()
+        plt.grid(True, which="both", ls="-", alpha=0.2)
         plt.savefig('degree_distribution.png')
+        plt.close()
 
     def plot_amount_distribution(self):
         """Plot the total incoming and outgoing amount distributions on a log-log scale."""
@@ -153,21 +162,21 @@ class PaymentNetworkSimulated:
         incoming_amounts = [cap[0] for cap in node_amounts.values()]
         outgoing_amounts = [cap[1] for cap in node_amounts.values()]
 
+        alpha_incoming = self.measure_alpha(incoming_amounts)
+        alpha_outgoing = self.measure_alpha(outgoing_amounts)
+
         plt.figure(figsize=(10, 6))
         
-        # Plot incoming amounts
         plt.hist(incoming_amounts, bins=np.logspace(np.log10(min(incoming_amounts)), np.log10(max(incoming_amounts)), num=50), 
-                 density=True, alpha=0.5, label='Incoming amount')
-        
-        # Plot outgoing amounts
+                 density=True, alpha=0.5, label=f'Incoming amount (α = {alpha_incoming:.2f})')
         plt.hist(outgoing_amounts, bins=np.logspace(np.log10(min(outgoing_amounts)), np.log10(max(outgoing_amounts)), num=50), 
-                 density=True, alpha=0.5, label='Outgoing amount')
+                 density=True, alpha=0.5, label=f'Outgoing amount (α = {alpha_outgoing:.2f})')
         
         plt.xscale('log')
         plt.yscale('log')
         plt.xlabel('Total amount')
         plt.ylabel('Frequency')
-        plt.title('Incoming and Outgoing amount Distributions (Log-Log Scale)')
+        plt.title('Incoming and Outgoing Amount Distributions (Log-Log Scale)')
         plt.legend()
         plt.grid(True, which="both", ls="-", alpha=0.2)
         plt.savefig('amount_distribution.png')
