@@ -92,10 +92,7 @@ class PaymentNetworkSimulated:
 
     def sample_amount(self, edge):
         """
-        Sample the amount of an edge based on simulator of [SC13]
-
-        Parameters:
-        edge: 
+        Sample the amount of an `edge` based on simulator of [SC13]
         """
         source, target = edge
         d = min(self.G.out_degree(source), self.G.in_degree(target))
