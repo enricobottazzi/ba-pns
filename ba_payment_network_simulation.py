@@ -3,14 +3,15 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import powerlaw
+from math import exp
 
-class BarabasiAlbertGraph:
+class PaymentNetworkSimulated:
     def __init__(self, n, m_in, m_out, m0):
         """        
-        Initialize a directed Barabási-Albert scale-free graph.
+        Initialize a Simulated Payment Network based on Barabási-Albert scale-free algorithm
         
         Parameters:
-        n (int): Total number of nodes
+        n (int): Total number of nodes in the network
         m_in (int): Number of incoming edges to attach from a new node to existing nodes
         m_out (int): Number of outgoing edges to attach from a new node to existing nodes
         m0 (int): Initial number of nodes (must be >= max(m_in, m_out))
@@ -24,6 +25,7 @@ class BarabasiAlbertGraph:
         self.m0 = m0
         self.G = nx.complete_graph(m0, create_using=nx.DiGraph())
         self.new_node = m0
+        self.amount_matrix = np.zeros((n, n))
 
     def generate(self):
         """Generate the Barabási-Albert directed graph."""
@@ -44,7 +46,6 @@ class BarabasiAlbertGraph:
             self.new_node += 1
 
         print(f"\nFinal number of nodes ({len(self.G.nodes())}) reached")
-        return self.G
 
     def rand_prob_node(self, incoming=True):
         """
@@ -85,8 +86,38 @@ class BarabasiAlbertGraph:
             self.add_edge(incoming)
         else:
             self.G.add_edge(*new_edge)
-            print(f"Edge added: {new_edge[0] + 1} -> {new_edge[1] + 1}")
+            amount = self.sample_amount(new_edge)
+            self.amount_matrix[new_edge[0], new_edge[1]] = amount
+            print(f"Edge added: {new_edge[0] + 1} -> {new_edge[1] + 1}, with amount: {amount}")
 
+    def sample_amount(self, edge):
+        """
+        Sample the amount of an edge based on simulator of [SC13]
+
+        Parameters:
+        edge: 
+        """
+        source, target = edge
+        d = min(self.G.out_degree(source), self.G.in_degree(target))
+        v = np.random.normal(1, 0.2)
+        c = d * exp(v)
+        return c
+
+    def calculate_node_total_amounts(self):
+        """
+        Calculate the total amount of incoming and outgoing edges for each node.
+        
+        Returns:
+        dict: A dictionary where keys are node indices and values are tuples (incoming_amount, outgoing_amount)
+        """
+        node_amounts = {}
+        for node in self.G.nodes():
+            incoming_amount = sum(self.amount_matrix[:, node])
+            outgoing_amount = sum(self.amount_matrix[node, :])
+            node_amounts[node] = (incoming_amount, outgoing_amount)
+        
+        return node_amounts
+    
     def measure_alpha(self):
         """Measure the alpha value of the in-degree and out-degree distributions."""
         in_degrees = [degree for node, degree in self.G.in_degree()]
@@ -114,4 +145,30 @@ class BarabasiAlbertGraph:
         plt.ylabel('Frequency')
         plt.title('In-degree and Out-degree Distributions (Log-Log Scale)')
         plt.legend()
-        plt.savefig('degree_distribution_directed.png')
+        plt.savefig('degree_distribution.png')
+
+    def plot_amount_distribution(self):
+        """Plot the total incoming and outgoing amount distributions on a log-log scale."""
+        node_amounts = self.calculate_node_total_amounts()
+        incoming_amounts = [cap[0] for cap in node_amounts.values()]
+        outgoing_amounts = [cap[1] for cap in node_amounts.values()]
+
+        plt.figure(figsize=(10, 6))
+        
+        # Plot incoming amounts
+        plt.hist(incoming_amounts, bins=np.logspace(np.log10(min(incoming_amounts)), np.log10(max(incoming_amounts)), num=50), 
+                 density=True, alpha=0.5, label='Incoming amount')
+        
+        # Plot outgoing amounts
+        plt.hist(outgoing_amounts, bins=np.logspace(np.log10(min(outgoing_amounts)), np.log10(max(outgoing_amounts)), num=50), 
+                 density=True, alpha=0.5, label='Outgoing amount')
+        
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.xlabel('Total amount')
+        plt.ylabel('Frequency')
+        plt.title('Incoming and Outgoing amount Distributions (Log-Log Scale)')
+        plt.legend()
+        plt.grid(True, which="both", ls="-", alpha=0.2)
+        plt.savefig('amount_distribution.png')
+        plt.close()

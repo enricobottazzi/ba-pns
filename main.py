@@ -1,7 +1,8 @@
-from ba import BarabasiAlbertGraph
+from ba_payment_network_simulation import PaymentNetworkSimulated
 
-ba_graph = BarabasiAlbertGraph(n=5000, m_in=5, m_out=5, m0=5)
-G = ba_graph.generate()
-alpha = ba_graph.measure_alpha()
+payment_network_graph = PaymentNetworkSimulated(n=1000, m_in=5, m_out=5, m0=5)
+payment_network_graph.generate()
+alpha = payment_network_graph.measure_alpha()
 print(f"Alpha: {alpha}")
-ba_graph.plot_degree_distribution()
+payment_network_graph.plot_degree_distribution()
+payment_network_graph.plot_amount_distribution()
