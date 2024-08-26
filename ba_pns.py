@@ -7,7 +7,7 @@ from math import exp
 import pandas as pd
 
 class PaymentNetworkSimulated:
-    def __init__(self, n, m_in, m_out, m0, variable_edges=False):
+    def __init__(self, n, m_in, m_out, m0, swap_m_in_and_m_out=False):
         """        
         Initialize a Simulated Payment Network based on Barabási-Albert scale-free algorithm
         
@@ -16,7 +16,7 @@ class PaymentNetworkSimulated:
         m_in (int): Number of incoming edges to attach from a new node to existing nodes
         m_out (int): Number of outgoing edges to attach from a new node to existing nodes
         m0 (int): Initial number of nodes (must be >= max(m_in, m_out))
-        variable_edges (bool): If True, at each step, m_in and m_out are randomly shuffled
+        swap_m_in_and_m_out (bool): If True, at each step of preferential attachment, m_in and m_out have a 50% chance of being swapped
         """
         if m0 < max(m_in, m_out):
             raise ValueError("m0 must be greater than or equal to max(m_in, m_out)")
@@ -25,7 +25,7 @@ class PaymentNetworkSimulated:
         self.m_in = m_in
         self.m_out = m_out
         self.m0 = m0
-        self.variable_edges = variable_edges
+        self.swap_m_in_and_m_out = swap_m_in_and_m_out
         self.G = nx.complete_graph(m0, create_using=nx.DiGraph())
         self.new_node = m0
         self.amount_matrix = np.zeros((n, n))
@@ -44,7 +44,7 @@ class PaymentNetworkSimulated:
             m_in_step = self.m_in
             m_out_step = self.m_out
 
-            if self.variable_edges:
+            if self.swap_m_in_and_m_out:
                 if np.random.rand() < 0.5:
                     m_in_step, m_out_step = m_out_step, m_in_step
             
