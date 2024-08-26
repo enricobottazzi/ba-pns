@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import powerlaw
 from math import exp
+import pandas as pd
 
 class PaymentNetworkSimulated:
     def __init__(self, n, m_in, m_out, m0, variable_edges=False):
@@ -28,12 +29,12 @@ class PaymentNetworkSimulated:
         self.G = nx.complete_graph(m0, create_using=nx.DiGraph())
         self.new_node = m0
         self.amount_matrix = np.zeros((n, n))
+        self.df = pd.DataFrame(columns=['source', 'target', 'amount'])
 
     def generate(self):
         """Generate the Barabási-Albert directed graph."""
         print(f"Graph created. Number of nodes: {len(self.G.nodes())}")
         print("Adding nodes...")
-
 
         for count in range(self.n - self.m0):
             print(f"----------> Step {count} <----------")
@@ -99,6 +100,8 @@ class PaymentNetworkSimulated:
             self.G.add_edge(*new_edge)
             amount = self.sample_amount(new_edge)
             self.amount_matrix[new_edge[0], new_edge[1]] = amount
+            new_row = pd.DataFrame({'source': [new_edge[0]], 'target': [new_edge[1]], 'amount': [amount]})
+            self.df = pd.concat([self.df, new_row], ignore_index=True)
             print(f"Edge added: {new_edge[0] + 1} -> {new_edge[1] + 1}, with amount: {amount}")
 
     def sample_amount(self, edge):
