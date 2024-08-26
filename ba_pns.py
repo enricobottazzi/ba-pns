@@ -6,7 +6,7 @@ import powerlaw
 from math import exp
 
 class PaymentNetworkSimulated:
-    def __init__(self, n, m_in, m_out, m0):
+    def __init__(self, n, m_in, m_out, m0, variable_edges=False):
         """        
         Initialize a Simulated Payment Network based on Barabási-Albert scale-free algorithm
         
@@ -15,6 +15,7 @@ class PaymentNetworkSimulated:
         m_in (int): Number of incoming edges to attach from a new node to existing nodes
         m_out (int): Number of outgoing edges to attach from a new node to existing nodes
         m0 (int): Initial number of nodes (must be >= max(m_in, m_out))
+        variable_edges (bool): If True, at each step, m_in and m_out are randomly shuffled
         """
         if m0 < max(m_in, m_out):
             raise ValueError("m0 must be greater than or equal to max(m_in, m_out)")
@@ -23,6 +24,7 @@ class PaymentNetworkSimulated:
         self.m_in = m_in
         self.m_out = m_out
         self.m0 = m0
+        self.variable_edges = variable_edges
         self.G = nx.complete_graph(m0, create_using=nx.DiGraph())
         self.new_node = m0
         self.amount_matrix = np.zeros((n, n))
@@ -32,20 +34,29 @@ class PaymentNetworkSimulated:
         print(f"Graph created. Number of nodes: {len(self.G.nodes())}")
         print("Adding nodes...")
 
+
         for count in range(self.n - self.m0):
             print(f"----------> Step {count} <----------")
             self.G.add_node(self.m0 + count)
             print(f"Node added: {self.m0 + count + 1}")
+
+            m_in_step = self.m_in
+            m_out_step = self.m_out
+
+            if self.variable_edges:
+                if np.random.rand() < 0.5:
+                    m_in_step, m_out_step = m_out_step, m_in_step
             
-            for _ in range(self.m_in):
+            for _ in range(m_in_step):
                 self.add_edge(incoming=True)
                 
-            for _ in range(self.m_out):
+            for _ in range(m_out_step):
                 self.add_edge(incoming=False)
             
             self.new_node += 1
 
         print(f"\nFinal number of nodes ({len(self.G.nodes())}) reached")
+        print(f"Final number of edges is ({len(self.G.edges())})")
 
     def rand_prob_node(self, incoming=True):
         """
