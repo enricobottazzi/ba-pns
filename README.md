@@ -13,7 +13,7 @@ Both the results are in line with the findings, from real-world dataset, of [Ber
 ### Run
 
 ```
-pip install -r requirements.txt
+pip install .
 python3 main.py
 ```
 
