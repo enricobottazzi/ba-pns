@@ -33,13 +33,10 @@ class PaymentNetworkSimulated:
 
     def generate(self):
         """Generate the Barabási-Albert directed graph."""
-        print(f"Graph created. Number of nodes: {len(self.G.nodes())}")
-        print("Adding nodes...")
+        print(f"Generating graph....")
 
         for count in range(self.n - self.m0):
-            print(f"----------> Step {count} <----------")
             self.G.add_node(self.m0 + count)
-            print(f"Node added: {self.m0 + count + 1}")
 
             m_in_step = self.m_in
             m_out_step = self.m_out
@@ -94,7 +91,8 @@ class PaymentNetworkSimulated:
             new_edge = (self.new_node, random_proba_node)
         
         if new_edge in self.G.edges():
-            print("Edge already exists. Trying again...")
+            self.add_edge(incoming)
+        elif new_edge[0] == new_edge[1]:
             self.add_edge(incoming)
         else:
             self.G.add_edge(*new_edge)
@@ -102,7 +100,6 @@ class PaymentNetworkSimulated:
             self.amount_matrix[new_edge[0], new_edge[1]] = amount
             new_row = pd.DataFrame({'source': [new_edge[0]], 'target': [new_edge[1]], 'amount': [amount]})
             self.df = pd.concat([self.df, new_row], ignore_index=True)
-            print(f"Edge added: {new_edge[0] + 1} -> {new_edge[1] + 1}, with amount: {amount}")
 
     def sample_amount(self, edge):
         """
