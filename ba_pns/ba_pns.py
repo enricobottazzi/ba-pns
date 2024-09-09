@@ -29,7 +29,7 @@ class PaymentNetworkSimulated:
         self.G = nx.complete_graph(m0, create_using=nx.DiGraph())
         self.new_node = m0
         self.amount_matrix = np.zeros((n, n))
-        self.df = pd.DataFrame(columns=['source', 'target', 'amount'])
+        self.df = pd.DataFrame(columns=['debtor', 'creditor', 'amount'])
 
     def generate(self):
         """Generate the Barabási-Albert directed graph."""
@@ -98,15 +98,15 @@ class PaymentNetworkSimulated:
             self.G.add_edge(*new_edge)
             amount = self.sample_amount(new_edge)
             self.amount_matrix[new_edge[0], new_edge[1]] = amount
-            new_row = pd.DataFrame({'source': [new_edge[0]], 'target': [new_edge[1]], 'amount': [amount]})
+            new_row = pd.DataFrame({'debtor': [new_edge[0]], 'creditor': [new_edge[1]], 'amount': [amount]})
             self.df = pd.concat([self.df, new_row], ignore_index=True)
 
     def sample_amount(self, edge):
         """
         Sample the amount of an `edge` based on simulator of [SC13]
         """
-        source, target = edge
-        d = min(self.G.out_degree(source), self.G.in_degree(target))
+        debtor, creditor = edge
+        d = min(self.G.out_degree(debtor), self.G.in_degree(creditor))
         v = np.random.normal(1, 0.2)
         c = d * exp(v)
         return c
